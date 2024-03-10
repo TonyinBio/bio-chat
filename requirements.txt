@@ -1,0 +1,5 @@
+dataclasses_json~=0.6.4
+llama_index~=0.10.18
+python-dotenv~=1.0.1
+tqdm~=4.66.2
+typing_extensions~=4.10.0
