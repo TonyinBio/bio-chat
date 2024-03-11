@@ -34,19 +34,9 @@ neo4j_graph = Neo4jGraphStore(
     password=password,
     url=url 
 )
-neo4j_vector = Neo4jVectorStore(
-    username=username,
-    password=password,
-    url=url
-)
+storage_context = StorageContext.from_defaults(graph_store=neo4j_graph)
 
-storage_context = StorageContext.from_defaults(graph_store=neo4j_graph, vector_store=neo4j_vector)
 
-### THE plan:
-# VectorIndex (VectorIndexRetriever) -> interfaces with embeddings in neo4j
-# GraphIndex (KGRAGRetriever) -> interfaces with triplets and subgraph in neo4j 
-# GRetriever -> combines the two
-# will use both neo4jstores but have them point to the same db
 
 # init llm and embedder
 Settings.llm = Ollama(model="gemma:2b", request_timeout=60.0, temperature=0)

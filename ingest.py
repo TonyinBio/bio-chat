@@ -42,7 +42,7 @@ neo4j_vector = Neo4jVectorStore(
 )
 
 # init llm and embedder
-Settings.llm = Ollama(model="gemma:2b-instruct", request_timeout=60.0, temperature=0)
+Settings.llm = Ollama(model="gemma", request_timeout=60.0, temperature=0)
 Settings.embed_model = resolve_embed_model("local:BAAI/bge-small-en-v1.5")
 Settings.chunk_size = 512
 
@@ -79,6 +79,12 @@ triplets = pipeline.run(
 # organoleptic_effect 
 # process
 # role
+
+### THE plan:
+# VectorIndex (VectorIndexRetriever) -> interfaces with embeddings in neo4j
+# GraphIndex (KGRAGRetriever) -> interfaces with triplets and subgraph in neo4j 
+# GRetriever -> combines the two
+# will use both neo4jstores but have them point to the same db
 
 # save nodes to vector & graph store at end
 for triplet in triplets:
