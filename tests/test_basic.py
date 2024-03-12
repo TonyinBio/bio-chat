@@ -35,7 +35,7 @@ Settings.llm = Ollama(model="gemma:2b", request_timeout=60.0, temperature=0)
 Settings.embed_model = resolve_embed_model("local:BAAI/bge-small-en-v1.5")
 Settings.chunk_size = 512
 
-PERSIST_DIR = "./storage"
+PERSIST_DIR = None
 # if not os.path.exists(PERSIST_DIR):
 #     # load the documents and create the index
 #     documents = SimpleDirectoryReader("data").load_data()

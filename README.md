@@ -19,4 +19,27 @@ Run a prompt:
 python starter.py
 ```
 
+TODO: Write custom retriever
+
+TODO: Write cypher query to upload embedding. (so we can have the full graph and then create embeddings after)
+
+TODO: Create NER evaluation dataset
+
+TODO: Decide on predicates
+- chemical
+- source
+- disposition 
+- exposure_route 
+- food
+- health_effect
+- organoleptic_effect 
+- process
+- role
+
+THE plan:
+- VectorIndex (VectorIndexRetriever) -> interfaces with embeddings in neo4j
+- GraphIndex (KGRAGRetriever) -> interfaces with triplets and subgraph in neo4j 
+- GRetriever -> combines the two
+- will use both neo4jstores but have them point to the same db
+
 <sub><sub><sub><sub><sup><sup><sup><sup>pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and sufferingpain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and sufferingpain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and sufferingpain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering</sup></sup></sup></sup>
