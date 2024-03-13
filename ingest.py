@@ -54,6 +54,7 @@ pipeline = IngestionPipeline(
     vector_store=None,  # save the subjects and objects
 )
 # read jsonl into triplets
+# TODO: read more data
 fname = "data/triplets/pubmed_triplet_data_part_2.jsonl"
 with open(fname, "r") as f:
     jsonl = f.read()

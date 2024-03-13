@@ -22,13 +22,24 @@ from llama_index.core.vector_stores.types import (
 )
 from llama_index.core.settings import (
     embed_model_from_settings_or_context,
+    callback_manager_from_settings_or_context,
     Settings,
 )
 
 from ext_graph_stores import CustomNeo4jGraphStore
 from typing import List, Tuple, Optional, Dict, Any
-from pcst import retrieval_via_pcst
 
+# pcst stuff
+from pcst import retrieval_via_pcst
+import pandas as pd
+from torch_geometric.data.data import Data
+import torch
+
+# formatting
+from llama_index.core.utils import print_text, truncate_text
+
+# idk
+from llama_index.core.callbacks.base import CallbackManager
 from pprint import pprint
 
 class GRetriever(BaseRetriever):
@@ -37,10 +48,15 @@ class GRetriever(BaseRetriever):
     def __init__(
         self,
         storage_context: StorageContext,
+        callback_manager: Optional[CallbackManager] = None,
         **kwargs,
     ) -> None:
         """Init params."""
-        super().__init__(storage_context, **kwargs)
+        super().__init__(
+            callback_manager=callback_manager
+            or callback_manager_from_settings_or_context(Settings, None),
+            **kwargs
+        )
         self._custom_graph_store = storage_context.graph_store
         self._embed_model = embed_model_from_settings_or_context(Settings, None)
         self._similarity_top_k = 2
@@ -60,8 +76,8 @@ class GRetriever(BaseRetriever):
 
         top_entities = self._get_similar_nodes(query)
         neighbours = self._get_all_neighbours(top_entities)
-        sub_graph = self._pcst(top_entities, neighbours)
-        nodes = self._build_nodes_from_sub_graph(sub_graph)
+        sgraph, desc = self._pcst(top_entities, neighbours, query_bundle)
+        nodes = self._build_nodes(sgraph, desc)
 
         return nodes
     
@@ -101,7 +117,7 @@ class GRetriever(BaseRetriever):
 
         return VectorStoreQueryResult(nodes=nodes, similarities=similarities, ids=ids)
     
-    def _get_all_neighbours(self, nodes: List[NodeWithScore], depth: int = 3) -> List[TextNode]:
+    def _get_all_neighbours(self, top_entities: VectorStoreQueryResult, depth: int = 3) -> List[TextNode]:
         """Retrieve all neighbours of depth k given entities."""
         query = f'''
             MATCH p=(seedNodes:Entity)-[*0..{depth}]-(:Entity)
@@ -112,17 +128,93 @@ class GRetriever(BaseRetriever):
             RETURN startNode(r).id AS subj, r.type AS pred, endNode(r).id AS obj
         '''
         params = {
-            "seedNodes": [node.text for node in nodes],
+            "seedNodes": [node.text for node in top_entities.nodes],
         }
         
         neighbours = self._custom_graph_store.query(query, param_map=params)
         return neighbours
     
-    def _pcst(self, nodes: List[NodeWithScore]) -> str:
+    def _pcst(self, top_entities: List[NodeWithScore], neighbours: str, query_bundle: QueryBundle) -> str:
         """Retrieve subgraph given nodes."""
-        query = ""
-        subgraph = self._custom_graph_store.query(query, param_map={})
-        return subgraph
+
+        # get distinct nodes
+        edges: pd.DataFrame = pd.DataFrame(columns=["src", "edge_attr", "dst"])
+        distinct_entities = {}
+        avail_id = 0
+        for entity in neighbours:
+            # check if entity has id
+            if entity["subj"] not in distinct_entities:
+                distinct_entities[entity["subj"]] = avail_id
+                avail_id += 1
+            if entity["obj"] not in distinct_entities:
+                distinct_entities[entity["obj"]] = avail_id
+                avail_id += 1
+            
+            # get id of distinct_entities
+            src_id = distinct_entities[entity["subj"]]
+            dst_id = distinct_entities[entity["obj"]]
+            # add to edges
+            l = len(edges)
+            edges.loc[l] = [src_id, entity["pred"], dst_id]
+        # add to nodes
+        nodes: pd.DataFrame = pd.DataFrame(
+            [[node_id, node_attr] for node_attr, node_id in distinct_entities.items()], 
+            columns=["node_id", "node_attr"]
+        )
+
+        # get graph
+        # NOTE: inefficient, but will re-generate embeddings for now.
+        # nodes
+        # nodes.fillna({"node_attr": ""}, inplace=True)
+        # x.shape = [num_nodes, embed_dim]
+        x = self._embed_model.get_text_embedding_batch(texts=nodes.node_attr.tolist())
+        x = torch.tensor(x, dtype=torch.float32)
+
+        # edges
+        # edges_attr.shape = [num_edges, embed_dim]
+        edge_attr = self._embed_model.get_text_embedding_batch(texts=edges.edge_attr.tolist())
+        edge_attr = torch.tensor(edge_attr, dtype=torch.float32)
+        
+        edge_index = torch.LongTensor([edges.src.tolist(), edges.dst.tolist()])
+
+        graph = Data(
+            x=x, 
+            edge_index=edge_index,
+            edge_attr=edge_attr, 
+            num_nodes=len(nodes)
+        )
+        sgraph, desc = retrieval_via_pcst(
+            graph,
+            torch.tensor(query_bundle.embedding),
+            nodes,
+            edges,
+        )
+
+        return sgraph, desc
     
-    def _build_nodes_from_sub_graph(self, knowledge_sequence, rel_map):
-        pass
+    def _build_nodes(self, sgraph: Data, desc: str) -> List[NodeWithScore]:
+        """Build nodes from pcst output"""
+        # if len(knowledge_sequence) == 0:
+        #     logger.info("> No knowledge sequence extracted from entities.")
+        #     return []
+        context_string = (
+f'''The following is a knowledge in the form of directed graph like:
+Nodes:
+node_id, node_attr
+
+Edges:
+src, edge_attr, dst
+
+Knowledge:
+{desc}''')
+        if self._verbose:
+            print_text(f"Graph RAG context:\n{context_string}\n", color="blue")
+
+        node = NodeWithScore(
+            node=TextNode(
+                text=context_string,
+                score=1.0,
+            )
+        )
+
+        return [node]

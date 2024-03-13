@@ -19,9 +19,9 @@ Run a prompt:
 python starter.py
 ```
 
-TODO: Write custom retriever
+TODO: Display subgraph as a figure in chainlit
 
-TODO: Write cypher query to upload embedding. (so we can have the full graph and then create embeddings after)
+TODO: Improve prompt?
 
 TODO: Create NER evaluation dataset
 

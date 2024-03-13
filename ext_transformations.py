@@ -103,7 +103,8 @@ class TripletExtractor(TransformComponent):
             text=text,
         )
         return self._parse_triplet_response(response)
-    # parsing using (format)
+    
+    # NOTE: parsing using (format)
     # @staticmethod
     # def _parse_triplet_response(
     #     response: str, max_length: int = 128
@@ -141,7 +142,8 @@ class TripletExtractor(TransformComponent):
     #         results.append((subj, pred, obj))
     #     logging.debug(f"Parsed response: {results}")
     #     return results
-    # parsing using | format |
+
+    # NOTE: parsing using | format |
     @staticmethod
     def _parse_triplet_response(
         response: str, max_length: int = 128
@@ -208,6 +210,7 @@ class JsonlToTriplets(TransformComponent):
             show_progress = False,
             **kwargs
     ) -> Sequence[TripletNode]:
+        # TODO: include triples that have tags <data>entity</data>
         new_nodes = []
         if show_progress:
             from tqdm import tqdm

@@ -14,6 +14,7 @@ from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 
 # llama-index extensions
 from ext_graph_stores import CustomNeo4jGraphStore
+from ext_retrievers import GRetriever
 
 # fix llama index and chainlit bug
 import llama_index
@@ -34,7 +35,7 @@ neo4j_graph = CustomNeo4jGraphStore(
     username=username,
     password=password,
     url=url,
-    embedding_dimension=3,
+    embedding_dimension=384,
 )
 PERSIST_DIR = None
 storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR, graph_store=neo4j_graph)
@@ -49,7 +50,8 @@ async def factory():
     # init llm and embedder
     Settings.callback_manager = CallbackManager([cl.LlamaIndexCallbackHandler()])
 
-    retriever = KnowledgeGraphRAGRetriever(storage_context=storage_context, verbose=True)  # NOTE: had to change super to top in src code
+    retriever = GRetriever(storage_context=storage_context, verbose=True)  # NOTE: had to change super to top in src code
+    
     query_engine = RetrieverQueryEngine.from_args(
         retriever, 
         response_mode="compact",

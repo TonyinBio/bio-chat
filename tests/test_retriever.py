@@ -45,4 +45,12 @@ storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR, graph_st
 
 retriever = GRetriever(storage_context=storage_context, verbose=True)  # NOTE: had to change super to top in src code
 
-retriever._retrieve(query_bundle=QueryBundle(query_str="cannabinoids"))
+# retriever.retrieve(str_or_query_bundle=QueryBundle(query_str="cannabinoids"))
+
+# query_engine = RetrieverQueryEngine.from_args(
+#     retriever, 
+#     response_mode="compact",
+#     include_text=True,
+# )
+
+# print(query_engine.query("Tell me about cannabinoids"))
