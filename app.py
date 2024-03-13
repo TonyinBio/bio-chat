@@ -33,7 +33,8 @@ url = os.environ.get("url")
 neo4j_graph = CustomNeo4jGraphStore(
     username=username,
     password=password,
-    url=url 
+    url=url,
+    embedding_dimension=3,
 )
 PERSIST_DIR = None
 storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR, graph_store=neo4j_graph)
@@ -47,7 +48,7 @@ Settings.chunk_size = 512
 async def factory():
     # init llm and embedder
     Settings.callback_manager = CallbackManager([cl.LlamaIndexCallbackHandler()])
-    
+
     retriever = KnowledgeGraphRAGRetriever(storage_context=storage_context, verbose=True)  # NOTE: had to change super to top in src code
     query_engine = RetrieverQueryEngine.from_args(
         retriever, 
@@ -57,7 +58,6 @@ async def factory():
     )
 
     cl.user_session.set("query_engine", query_engine)
-
 
 @cl.on_message
 async def main(message: cl.Message):

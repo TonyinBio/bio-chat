@@ -14,7 +14,12 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.indices import KnowledgeGraphIndex
 from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 
+from llama_index.core.schema import QueryBundle
 from ext_graph_stores import CustomNeo4jGraphStore
+from ext_retrievers import GRetriever
+
+from pprint import pprint
+
 import logging, sys
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -26,9 +31,9 @@ url = os.environ.get("url")
 neo4j_graph = CustomNeo4jGraphStore(
     username=username,
     password=password,
-    url=url 
+    url=url,
+    embedding_dimension=384
 )
-# print(neo4j_graph.query("MATCH (n:Entity) RETURN n LIMIT 25;"))
 
 # init llm and embedder
 Settings.llm = Ollama(model="gemma:2b", request_timeout=60.0, temperature=0)
@@ -36,33 +41,8 @@ Settings.embed_model = resolve_embed_model("local:BAAI/bge-small-en-v1.5")
 Settings.chunk_size = 512
 
 PERSIST_DIR = None
-# if not os.path.exists(PERSIST_DIR):
-#     # load the documents and create the index
-#     documents = SimpleDirectoryReader("data").load_data()
-#     storage_context = StorageContext.from_defaults(graph_store=neo4j_graph)
-#     index = KnowledgeGraphIndex.from_documents(
-#         documents, 
-#         storage_context=storage_context,
-#         show_progress=True,
-#     )
-#     # store it for later
-#     index.storage_context.persist(persist_dir=PERSIST_DIR)
-# else:
-#     # load the existing index
-#     storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR, graph_store=neo4j_graph)
-#     index = load_index_from_storage(storage_context)
 storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR, graph_store=neo4j_graph)
-# index = load_index_from_storage(storage_context)
-# g = index.get_networkx_graph()
-# from pyvis.network import Network
-# net = Network(notebook=False, directed=True)
-# net.from_nx(g)
-# net.save_graph("non_filtered_graph.html")
 
-retriever = KnowledgeGraphRAGRetriever(storage_context=storage_context, verbose=True)  # NOTE: had to change super to top in src code
-query_engine = RetrieverQueryEngine.from_args(
-    retriever
-)
-# query_engine = index.as_query_engine(verbose=True, include_text=True)
+retriever = GRetriever(storage_context=storage_context, verbose=True)  # NOTE: had to change super to top in src code
 
-print(query_engine.query("What is Lisp?"))
+retriever._retrieve(query_bundle=QueryBundle(query_str="cannabinoids"))

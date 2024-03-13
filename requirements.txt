@@ -8,3 +8,9 @@ llama-index-vector-stores-neo4jvector
 llama-index-llms-ollama
 chainlit
 llama-index-embeddings-huggingface
+
+--index-url https://download.pytorch.org/whl/cu118
+torch
+pcst_fast
+pyg_lib
+torch_geometric

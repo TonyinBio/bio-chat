@@ -29,9 +29,9 @@ def clean_params(params: List[TripletNode]) -> List[Dict[str, Any]]:
     """Convert BaseNode object to a dictionary to be imported into Neo4j."""
     clean_params = []
     for triple in params:
-        subj_id = triple.subject.get_content().capitalize()
+        subj_id = triple.subject.get_content().lower()
         subj_embed = triple.subject.get_embedding()
-        obj_id = triple.object.get_content().capitalize()
+        obj_id = triple.object.get_content().lower()
         obj_embed = triple.object.get_embedding()
         rel = triple.predicate.get_content().replace(" ", "_").upper()
         clean_params.append(

@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 
 from llama_index.core.prompts import PromptTemplate, PromptType
 
+import json
+from pprint import pprint
 DEFAULT_KG_TRIPLET_EXTRACT_PROMPT = PromptTemplate(
     (
         "Some text is provided below. Given the text, extract up to "
@@ -198,3 +200,44 @@ class GraphEmbedding(TransformComponent):
         self._embed_model(objects)
         
         return nodes
+
+class JsonlToTriplets(TransformComponent):
+    def __call__(
+            self, 
+            nodes: Sequence[BaseNode],
+            show_progress = False,
+            **kwargs
+    ) -> Sequence[TripletNode]:
+        new_nodes = []
+        if show_progress:
+            from tqdm import tqdm
+            nodes = tqdm(nodes, "Parsing jsonl")
+        for node in nodes:
+            # extract triplets
+            lines = node.get_content(metadata_mode=MetadataMode.NONE).strip().split("\n")
+            for line in lines:
+                try:
+                    text_triplets: str = json.loads(line)["output"][0]
+                except:
+                    continue
+                if not text_triplets.startswith("[["):
+                    continue
+                text_triplets = text_triplets.replace("\'", "\"")
+                triplets = json.loads(text_triplets)
+                for triplet in triplets:
+                    if len(triplet) != 3:
+                        continue
+                    if any(len(s.encode("utf-8")) > 128 for s in triplet):
+                        continue
+                    if any(not s for s in triplet):
+                        continue
+                    if any("<" in s for s in triplet):
+                        continue
+                    new_nodes.append(
+                        TripletNode(
+                            subject=TextNode(text=triplet[0]),
+                            predicate=TextNode(text=triplet[1]),
+                            object=TextNode(text=triplet[2])
+                        )
+                    )
+        return new_nodes

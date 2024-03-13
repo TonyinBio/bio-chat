@@ -12,13 +12,13 @@ from llama_index.core.embeddings import resolve_embed_model
 
 from llama_index.core.indices import KnowledgeGraphIndex
 
-from llama_index.core.schema import BaseNode
-from ext_transformations import TripletExtractor, GraphEmbedding
+from llama_index.core.schema import BaseNode, TextNode
+from ext_transformations import TripletExtractor, GraphEmbedding, JsonlToTriplets
 from ext_graph_stores import CustomNeo4jGraphStore
 import logging
 import sys
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 
@@ -33,7 +33,8 @@ url = os.environ.get("url")
 neo4j_graph = CustomNeo4jGraphStore(
     username=username,
     password=password,
-    url=url 
+    url=url,
+    embedding_dimension=384,
 )
 
 # init llm and embedder
@@ -47,28 +48,24 @@ pipeline = IngestionPipeline(
         # SentenceSplitter(),  # Document -> BaseNode (more)
         # TitleExtractor(),  # BaseNode -> BaseNode with metadata
         # TripletExtractor(),  # BaseNode -> TripletNode
-        TripletParser(),
+        JsonlToTriplets(),
         GraphEmbedding(),  # TripletNode -> TripletNode
     ],
     vector_store=None,  # save the subjects and objects
 )
-reader = SimpleDirectoryReader("tests/data")
-# documents = reader.load_data(show_progress=True)
 # read jsonl into triplets
-documents = Document()
+fname = "data/triplets/pubmed_triplet_data_part_2.jsonl"
+with open(fname, "r") as f:
+    jsonl = f.read()
+
+nodes = [TextNode(text=jsonl)]
 # Ingest directly into a vector db
 triplets = pipeline.run(
     show_progress=True, 
-    documents=documents
+    nodes=nodes
+    # documents=documents
 )
 
+print(len(triplets))
 # save nodes to graph store
 neo4j_graph.add(triplets)
-# query_engine = index.as_query_engine(
-#     include_text=True, 
-#     response_mode="compact",
-#     retriever_mode="embedding"
-# )
-# response = query_engine.query(
-#     "Tell me more about Interleaf",
-# )
