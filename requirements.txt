@@ -15,3 +15,5 @@ torch
 pcst_fast
 torch_geometric
 pandas
+plotly
+networkx

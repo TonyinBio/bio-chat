@@ -1,6 +1,6 @@
 import logging, sys
 import os
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+# logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 from src.extensions.graph_stores import CustomNeo4jGraphStore
 from src.extensions.schema import TripletNode
@@ -19,11 +19,11 @@ neo4j_graph = CustomNeo4jGraphStore(
     url=url,
     embedding_dimension=3
 )
-data = [
-    TripletNode(
-        subject=TextNode(text=str(i), embedding=[i] * 3),
-        predicate=TextNode(text=str(i) + "rel"),
-        object=TextNode(text=str(-i), embedding=[-i] * 3),
-    ) for i in range(1, 4)
-]
-neo4j_graph.add(data)
+# data = [
+#     TripletNode(
+#         subject=TextNode(text=str(i), embedding=[i] * 3),
+#         predicate=TextNode(text=str(i) + "rel"),
+#         object=TextNode(text=str(-i), embedding=[-i] * 3),
+#     ) for i in range(1, 4)
+# ]
+# neo4j_graph.add(data)

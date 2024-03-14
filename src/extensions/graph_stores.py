@@ -70,10 +70,11 @@ class CustomNeo4jGraphStore(Neo4jGraphStore):
             self.create_new_index()
 
     def __del__(self):
-        print("here")
-        # print(self._driver._closed)
-        # self._driver.close()
-        # print("here2")
+        print(f"neo4j driver closed: {self._driver._closed}")
+        if not self._driver._closed:
+            self._driver.close()
+        print(f"neo4j driver closed: {self._driver._closed}")
+
     def add(self, nodes: List[TripletNode], **add_kwargs: Any) -> List[str]:
         import_query = (
             "UNWIND $data as row "

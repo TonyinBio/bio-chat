@@ -29,6 +29,7 @@ WRAP_WIDTH = 70
     
 from llama_index.core.schema import TextNode, BaseNode, MetadataMode
 
+
 class TripletNode(BaseNode):
     subject: TextNode
     predicate: TextNode

@@ -25,6 +25,8 @@ TODO: Improve prompt?
 
 TODO: Create NER evaluation dataset
 
+TODO: Mess with CLIP/soft prompting?
+
 TODO: Decide on predicates
 - chemical
 - source

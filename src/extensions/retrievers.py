@@ -77,9 +77,24 @@ class GRetriever(BaseRetriever):
             query_str=query_bundle.query_str,
         )
 
+        # TODO: send callback event
+        self._check_callback_manager()
+        # get top nodes
         top_entities = self._get_similar_nodes(query)
-        neighbours = self._get_all_neighbours(top_entities)
-        sgraph, desc = self._pcst(top_entities, neighbours, query_bundle)
+        # get subgraph
+        with self.callback_manager.event(
+            CBEventType.RETRIEVE,
+            payload={
+                EventPayload.QUERY_STR: query_bundle.query_str,
+                EventPayload.ADDITIONAL_KWARGS: "graph"
+            },
+        ) as retrieve_event:
+            neighbours = self._get_all_neighbours(top_entities)
+            sgraph, desc, g_edges, g_nodes = self._pcst(top_entities, neighbours, query_bundle)
+            retrieve_event.on_end(
+                payload={EventPayload.FUNCTION_OUTPUT: (g_edges, g_nodes)},
+            )  
+
         nodes = self._build_nodes(sgraph, desc)
 
         return nodes
@@ -137,7 +152,12 @@ class GRetriever(BaseRetriever):
         neighbours = self._custom_graph_store.query(query, param_map=params)
         return neighbours
     
-    def _pcst(self, top_entities: List[NodeWithScore], neighbours: str, query_bundle: QueryBundle) -> str:
+    def _pcst(
+            self, 
+            top_entities: List[NodeWithScore], 
+            neighbours: str, 
+            query_bundle: QueryBundle
+    ) -> Tuple[Data, str, pd.DataFrame, pd.DataFrame]:
         """Retrieve subgraph given nodes."""
 
         # get distinct nodes
@@ -186,14 +206,14 @@ class GRetriever(BaseRetriever):
             edge_attr=edge_attr, 
             num_nodes=len(nodes)
         )
-        sgraph, desc = retrieval_via_pcst(
+        sgraph, desc, sedges, snodes = retrieval_via_pcst(
             graph,
             torch.tensor(query_bundle.embedding),
             nodes,
             edges,
         )
 
-        return sgraph, desc
+        return sgraph, desc, sedges, snodes
     
     def _build_nodes(self, sgraph: Data, desc: str) -> List[NodeWithScore]:
         """Build nodes from pcst output"""

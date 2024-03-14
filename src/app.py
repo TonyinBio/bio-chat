@@ -3,6 +3,12 @@ import os
 import logging, sys
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
+# fix llama index and chainlit bug
+import llama_index
+import llama_index.core
+llama_index.__version__ = llama_index.core.__version__
+import chainlit as cl
+
 # llama-index core
 from llama_index.core.query_engine.retriever_query_engine import RetrieverQueryEngine
 from llama_index.core.callbacks.base import CallbackManager
@@ -15,12 +21,7 @@ from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 # llama-index extensions
 from extensions.graph_stores import CustomNeo4jGraphStore
 from extensions.retrievers import GRetriever
-
-# fix llama index and chainlit bug
-import llama_index
-import llama_index.core
-llama_index.__version__ = llama_index.core.__version__
-import chainlit as cl
+from extensions.callbacks import CustomCallbackHandler
 
 # from llama_index.graph_stores.neo4j import Neo4jGraphStore
 from llama_index.core import Settings
@@ -48,7 +49,7 @@ Settings.chunk_size = 512
 @cl.on_chat_start
 async def factory():
     # init llm and embedder
-    Settings.callback_manager = CallbackManager([cl.LlamaIndexCallbackHandler()])
+    Settings.callback_manager = CallbackManager([CustomCallbackHandler()])
 
     retriever = GRetriever(storage_context=storage_context, verbose=True)  # NOTE: had to change super to top in src code
     
@@ -61,18 +62,11 @@ async def factory():
 
     cl.user_session.set("query_engine", query_engine)
 
-@cl.step
-async def tool():
-    await cl.sleep(2)
-    return "HI LOL!"
-
 @cl.on_message
 async def main(message: cl.Message):
     query_engine = cl.user_session.get("query_engine")  # type: RetrieverQueryEngine
     aquery = cl.make_async(query_engine.query)
     response = await aquery(message.content)
-
-    # tool_res = await tool()
 
     response_message = cl.Message(content="")
 
