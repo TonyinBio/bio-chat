@@ -13,8 +13,8 @@ from llama_index.core import (
 from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 
 # llama-index extensions
-from ext_graph_stores import CustomNeo4jGraphStore
-from ext_retrievers import GRetriever
+from extensions.graph_stores import CustomNeo4jGraphStore
+from extensions.retrievers import GRetriever
 
 # fix llama index and chainlit bug
 import llama_index
@@ -61,11 +61,18 @@ async def factory():
 
     cl.user_session.set("query_engine", query_engine)
 
+@cl.step
+async def tool():
+    await cl.sleep(2)
+    return "HI LOL!"
+
 @cl.on_message
 async def main(message: cl.Message):
     query_engine = cl.user_session.get("query_engine")  # type: RetrieverQueryEngine
     aquery = cl.make_async(query_engine.query)
     response = await aquery(message.content)
+
+    # tool_res = await tool()
 
     response_message = cl.Message(content="")
 

@@ -12,8 +12,8 @@ from llama_index.core.embeddings import resolve_embed_model
 
 from llama_index.core.indices import KnowledgeGraphIndex
 
-from ext_transformations import TripletExtractor, GraphEmbedding
-from ext_schema import TripletNode
+from .transformations import TripletExtractor, GraphEmbedding
+from .schema import TripletNode
 from typing import List, Any, Dict
 import logging
 
@@ -81,7 +81,8 @@ class CustomNeo4jGraphStore(Neo4jGraphStore):
             f"MERGE (subj: `{self.node_label}` {{id: row.subj_id}}) "
             f"MERGE (obj: `{self.node_label}` {{id: row.obj_id}}) "
             "WITH subj, obj, row "
-            f"CALL apoc.create.relationship(subj, row.rel, {{type: row.rel}}, obj) YIELD rel "
+            # f"MERGE (subj)-[:row.rel {{type: row.rel}}]->(obj)"
+            f"CALL apoc.merge.relationship(subj, row.rel, {{type: row.rel}}, {{}}, obj, {{}}) YIELD rel "
             f"CALL db.create.setNodeVectorProperty(subj, '{self.embedding_property}', row.subj_embed) "
             f"CALL db.create.setNodeVectorProperty(obj, '{self.embedding_property}', row.obj_embed) "
             "} "

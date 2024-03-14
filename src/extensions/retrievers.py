@@ -3,10 +3,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 # import QueryBundle
-from llama_index.core import QueryBundle, StorageContext
+from llama_index.core import StorageContext
 
-# import NodeWithScore
-from llama_index.core.schema import NodeWithScore, TextNode
+# import types
+from llama_index.core.schema import NodeWithScore, TextNode, QueryBundle, QueryType
+from llama_index.core.callbacks.schema import CBEventType, EventPayload
 
 # Retrievers
 from llama_index.core.retrievers import (
@@ -26,11 +27,11 @@ from llama_index.core.settings import (
     Settings,
 )
 
-from ext_graph_stores import CustomNeo4jGraphStore
+from .graph_stores import CustomNeo4jGraphStore
 from typing import List, Tuple, Optional, Dict, Any
 
 # pcst stuff
-from pcst import retrieval_via_pcst
+from .pcst import retrieval_via_pcst
 import pandas as pd
 from torch_geometric.data.data import Data
 import torch
@@ -48,6 +49,7 @@ class GRetriever(BaseRetriever):
     def __init__(
         self,
         storage_context: StorageContext,
+        chainlit: bool = True,
         callback_manager: Optional[CallbackManager] = None,
         **kwargs,
     ) -> None:
@@ -57,10 +59,11 @@ class GRetriever(BaseRetriever):
             or callback_manager_from_settings_or_context(Settings, None),
             **kwargs
         )
+        self._chainlit = chainlit
         self._custom_graph_store = storage_context.graph_store
         self._embed_model = embed_model_from_settings_or_context(Settings, None)
         self._similarity_top_k = 2
-        
+    
     def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
         """Retrieve nodes given query."""
 

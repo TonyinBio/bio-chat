@@ -17,7 +17,7 @@ from llama_index.core.prompts.default_prompts import (
 )
 from llama_index.core.indices import KnowledgeGraphIndex
 
-from ext_schema import TripletNode
+from .schema import TripletNode
 
 from llama_index.core.bridge.pydantic import Field, PrivateAttr
 

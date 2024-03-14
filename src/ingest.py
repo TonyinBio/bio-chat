@@ -1,3 +1,10 @@
+import logging, sys
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
+
+print(sys.path)
+
 from llama_index.core import Document, SimpleDirectoryReader, Settings, StorageContext
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.node_parser import SentenceSplitter
@@ -13,13 +20,8 @@ from llama_index.core.embeddings import resolve_embed_model
 from llama_index.core.indices import KnowledgeGraphIndex
 
 from llama_index.core.schema import BaseNode, TextNode
-from ext_transformations import TripletExtractor, GraphEmbedding, JsonlToTriplets
-from ext_graph_stores import CustomNeo4jGraphStore
-import logging
-import sys
-
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
+from extensions.transformations import TripletExtractor, GraphEmbedding, JsonlToTriplets
+from extensions.graph_stores import CustomNeo4jGraphStore
 
 
 # init neo4j

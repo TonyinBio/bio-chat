@@ -1,5 +1,10 @@
+import logging, sys
+import os
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+from src.extensions.transformations import JsonlToTriplets, GraphEmbedding
+
 from llama_index.core.ingestion import IngestionPipeline
-from ext_transformations import JsonlToTriplets, GraphEmbedding
 from llama_index.core.schema import TextNode
 
 from pprint import pprint

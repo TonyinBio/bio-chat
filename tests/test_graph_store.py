@@ -1,6 +1,9 @@
-# from ... import ext_graph_stores
-from ext_graph_stores import CustomNeo4jGraphStore
-from ext_schema import TripletNode
+import logging, sys
+import os
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+from src.extensions.graph_stores import CustomNeo4jGraphStore
+from src.extensions.schema import TripletNode
 from llama_index.core.schema import TextNode
 # init neo4j
 from dotenv import load_dotenv

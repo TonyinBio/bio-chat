@@ -1,3 +1,9 @@
+import logging, sys
+import os
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+from src.extensions.graph_stores import CustomNeo4jGraphStore
+
 from llama_index.core.query_engine.retriever_query_engine import RetrieverQueryEngine
 from llama_index.core.callbacks.base import CallbackManager
 from llama_index.core import (
@@ -14,10 +20,6 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.indices import KnowledgeGraphIndex
 from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 
-from ext_graph_stores import CustomNeo4jGraphStore
-import logging, sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
 import os
 username = os.environ.get("username")
 password = os.environ.get("password")
@@ -26,7 +28,8 @@ url = os.environ.get("url")
 neo4j_graph = CustomNeo4jGraphStore(
     username=username,
     password=password,
-    url=url 
+    url=url,
+    embedding_dimension=384,
 )
 # print(neo4j_graph.query("MATCH (n:Entity) RETURN n LIMIT 25;"))
 
@@ -65,4 +68,4 @@ query_engine = RetrieverQueryEngine.from_args(
 )
 # query_engine = index.as_query_engine(verbose=True, include_text=True)
 
-print(query_engine.query("What is Lisp?"))
+print(query_engine.query("What are cannabinoids?"))

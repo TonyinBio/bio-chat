@@ -1,4 +1,13 @@
+import logging, sys
+import os
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# print(sys.path)
+from src.extensions.graph_stores import CustomNeo4jGraphStore
+from src.extensions.retrievers import GRetriever
+
 from llama_index.core.query_engine.retriever_query_engine import RetrieverQueryEngine
+
 from llama_index.core.callbacks.base import CallbackManager
 from llama_index.core import (
     StorageContext,
@@ -15,15 +24,10 @@ from llama_index.core.indices import KnowledgeGraphIndex
 from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 
 from llama_index.core.schema import QueryBundle
-from ext_graph_stores import CustomNeo4jGraphStore
-from ext_retrievers import GRetriever
 
 from pprint import pprint
 
-import logging, sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-import os
 username = os.environ.get("username")
 password = os.environ.get("password")
 url = os.environ.get("url")
