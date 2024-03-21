@@ -210,7 +210,7 @@ class JsonlToTriplets(TransformComponent):
             show_progress = False,
             **kwargs
     ) -> Sequence[TripletNode]:
-        # TODO: include triples that have tags <data>entity</data>
+        # TODO: test pmid implementation
         new_nodes = []
         if show_progress:
             from tqdm import tqdm
@@ -220,13 +220,16 @@ class JsonlToTriplets(TransformComponent):
             lines = node.get_content(metadata_mode=MetadataMode.NONE).strip().split("\n")
             for line in lines:
                 try:
-                    text_triplets: str = json.loads(line)["output"][0]
+                    datum = json.loads(line)
+                    text_triplets: str = datum["output"][0]
                 except:
                     continue
                 if not text_triplets.startswith("[["):
                     continue
                 text_triplets = text_triplets.replace("\'", "\"")
                 triplets = json.loads(text_triplets)
+
+                pmid = int(datum["id"])  # make sure it is an int
                 for triplet in triplets:
                     if len(triplet) != 3:
                         continue
@@ -240,7 +243,8 @@ class JsonlToTriplets(TransformComponent):
                         TripletNode(
                             subject=TextNode(text=triplet[0]),
                             predicate=TextNode(text=triplet[1]),
-                            object=TextNode(text=triplet[2])
+                            object=TextNode(text=triplet[2]),
+                            extra_info={"pmid": pmid}
                         )
                     )
         return new_nodes

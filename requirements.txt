@@ -17,3 +17,6 @@ torch_geometric
 pandas
 plotly
 networkx
+
+scipy==1.8.0
+networkx==2.6

@@ -9,6 +9,7 @@ from llama_index.core.callbacks import TokenCountingHandler
 from llama_index.core.callbacks.schema import EventPayload, CBEventType
 from llama_index.core.llms import ChatMessage, ChatResponse, CompletionResponse
 
+from llama_index.core.schema import BaseNode
 from torch_geometric.data.data import Data
 
 DEFAULT_IGNORE = [
@@ -100,7 +101,7 @@ class CustomCallbackHandler(cl.LlamaIndexCallbackHandler):
                 step.elements = [
                     Text(
                         name=f"Source {idx}",
-                        content=source.node.get_text() or "Empty node",
+                        content=source.node.get_text() + '\nCitations:\n' + '\n'.join(source.node.extra_info.get("citations")) or "Empty node",
                     )
                     for idx, source in enumerate(sources)
                 ]

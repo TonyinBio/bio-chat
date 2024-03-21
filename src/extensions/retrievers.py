@@ -8,6 +8,7 @@ from llama_index.core import StorageContext
 # import types
 from llama_index.core.schema import NodeWithScore, TextNode, QueryBundle, QueryType
 from llama_index.core.callbacks.schema import CBEventType, EventPayload
+from extensions.schema import GraphNode, TripletNode
 
 # Retrievers
 from llama_index.core.retrievers import (
@@ -79,7 +80,7 @@ class GRetriever(BaseRetriever):
 
         # TODO: send callback event
         self._check_callback_manager()
-        # get top nodes
+        # 1. get top nodes
         top_entities = self._get_similar_nodes(query)
         # get subgraph
         with self.callback_manager.event(
@@ -89,13 +90,17 @@ class GRetriever(BaseRetriever):
                 EventPayload.ADDITIONAL_KWARGS: "graph"
             },
         ) as retrieve_event:
+            # 2. get all neighbours
             neighbours = self._get_all_neighbours(top_entities)
-            sgraph, desc, g_edges, g_nodes = self._pcst(top_entities, neighbours, query_bundle)
+            # 3. get pcst
+            sgraph, desc, g_edges, g_nodes, graph_node = self._pcst(top_entities, neighbours, query_bundle)
             retrieve_event.on_end(
                 payload={EventPayload.FUNCTION_OUTPUT: (g_edges, g_nodes)},
             )  
 
-        nodes = self._build_nodes(sgraph, desc)
+        
+        # 4. convert to prompt
+        nodes = self._build_nodes(sgraph, graph_node)
 
         return nodes
     
@@ -119,6 +124,8 @@ class GRetriever(BaseRetriever):
         }
 
         results = self._custom_graph_store.query(retrieval_query, param_map=parameters)
+        if self._verbose:
+            print_text("Similar Nodes:" + str(results) + "\n", color="blue")
         nodes = []
         similarities = []
         ids = []
@@ -135,60 +142,50 @@ class GRetriever(BaseRetriever):
 
         return VectorStoreQueryResult(nodes=nodes, similarities=similarities, ids=ids)
     
-    def _get_all_neighbours(self, top_entities: VectorStoreQueryResult, depth: int = 3) -> List[TextNode]:
+    def _get_all_neighbours(self, top_entities: VectorStoreQueryResult, depth: int = 3) -> GraphNode:
         """Retrieve all neighbours of depth k given entities."""
+        # TODO: make sure pmid is returned
         query = f'''
             MATCH p=(seedNodes:Entity)-[*0..{depth}]-(:Entity)
             WHERE (seedNodes.id) IN ['cannabinoids']
             UNWIND p as path
             UNWIND relationships(path) as r
             WITH DISTINCT r
-            RETURN startNode(r).id AS subj, r.type AS pred, endNode(r).id AS obj
+            RETURN startNode(r).id AS subj, r.type AS pred, endNode(r).id AS obj, r.pmid as pmid
         '''
         params = {
             "seedNodes": [node.text for node in top_entities.nodes],
         }
         
         neighbours = self._custom_graph_store.query(query, param_map=params)
-        return neighbours
+        # print_text(f"Neighbours: {neighbours[0]['subj']}", color="yellow")
+        graph = GraphNode(
+            triplets=[
+                TripletNode(
+                    subject=TextNode(text=row["subj"]), 
+                    predicate=TextNode(text=row["pred"]),
+                    object=TextNode(text=row["obj"]),
+                    extra_info={"pmid": row["pmid"]}
+                ) for row in neighbours
+            ]
+        )
+        # print_text(f"Neighbours: {graph.triplets[0].get_content()}", color="green")
+        return graph
     
     def _pcst(
             self, 
             top_entities: List[NodeWithScore], 
-            neighbours: str, 
+            neighbours: GraphNode, 
             query_bundle: QueryBundle
-    ) -> Tuple[Data, str, pd.DataFrame, pd.DataFrame]:
+    ) -> Tuple[Data, str, pd.DataFrame, pd.DataFrame, GraphNode]:
         """Retrieve subgraph given nodes."""
 
         # get distinct nodes
-        edges: pd.DataFrame = pd.DataFrame(columns=["src", "edge_attr", "dst"])
-        distinct_entities = {}
-        avail_id = 0
-        for entity in neighbours:
-            # check if entity has id
-            if entity["subj"] not in distinct_entities:
-                distinct_entities[entity["subj"]] = avail_id
-                avail_id += 1
-            if entity["obj"] not in distinct_entities:
-                distinct_entities[entity["obj"]] = avail_id
-                avail_id += 1
-            
-            # get id of distinct_entities
-            src_id = distinct_entities[entity["subj"]]
-            dst_id = distinct_entities[entity["obj"]]
-            # add to edges
-            l = len(edges)
-            edges.loc[l] = [src_id, entity["pred"], dst_id]
-        # add to nodes
-        nodes: pd.DataFrame = pd.DataFrame(
-            [[node_id, node_attr] for node_attr, node_id in distinct_entities.items()], 
-            columns=["node_id", "node_attr"]
-        )
+        edges, nodes = neighbours.get_df()
 
         # get graph
         # NOTE: inefficient, but will re-generate embeddings for now.
         # nodes
-        # nodes.fillna({"node_attr": ""}, inplace=True)
         # x.shape = [num_nodes, embed_dim]
         x = self._embed_model.get_text_embedding_batch(texts=nodes.node_attr.tolist())
         x = torch.tensor(x, dtype=torch.float32)
@@ -213,30 +210,45 @@ class GRetriever(BaseRetriever):
             edges,
         )
 
-        return sgraph, desc, sedges, snodes
+        graph_node = GraphNode(triplets=[])
+        graph_node.set_df(sedges, snodes)
+        if self._verbose:
+            print_text(f"PCST:\n{graph_node}\n", color="red")
+        return sgraph, desc, sedges, snodes, graph_node
     
-    def _build_nodes(self, sgraph: Data, desc: str) -> List[NodeWithScore]:
+    def _build_nodes(self, sgraph: Data, graph_node: GraphNode) -> List[NodeWithScore]:
         """Build nodes from pcst output"""
+
+        desc = graph_node.get_content()
+
         # if len(knowledge_sequence) == 0:
         #     logger.info("> No knowledge sequence extracted from entities.")
         #     return []
-        context_string = (
-f'''The following is a knowledge in the form of directed graph like:
-Nodes:
-node_id, node_attr
+#         context_string = (
+# f'''The following is a knowledge in the form of directed graph like:
+# Nodes:
+# node_id, node_attr
 
-Edges:
-src, edge_attr, dst
+# Edges:
+# src, edge_attr, dst
+
+# Knowledge:
+# {desc}''')
+        
+        context_string = (
+f'''The following is a knowledge in the form of directed graph like: [subject, predicate, object]
 
 Knowledge:
 {desc}''')
+        citations = [f"PMID: {triplet.extra_info['pmid']}" for triplet in graph_node.triplets]
         if self._verbose:
-            print_text(f"Graph RAG context:\n{context_string}\n", color="blue")
+            print_text(f"Graph RAG context:\n{context_string}\n{citations}", color="blue")
 
         node = NodeWithScore(
             node=TextNode(
                 text=context_string,
                 score=1.0,
+                extra_info={"citations": citations}
             )
         )
 

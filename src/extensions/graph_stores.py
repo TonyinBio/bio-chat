@@ -30,15 +30,21 @@ def clean_params(params: List[TripletNode]) -> List[Dict[str, Any]]:
     clean_params = []
     for triple in params:
         subj_id = triple.subject.get_content().lower()
-        subj_embed = triple.subject.get_embedding()
         obj_id = triple.object.get_content().lower()
-        obj_embed = triple.object.get_embedding()
         rel = triple.predicate.get_content().replace(" ", "_").upper()
+
+        # TODO: Make sure pmid is uploaded to neo4j
+        pmid = triple.extra_info["pmid"]
+        if not pmid:
+            logger.warning(f"Did not find PMID for: {triple}")
+        subj_embed = triple.subject.get_embedding()
+        obj_embed = triple.object.get_embedding()
         clean_params.append(
             {
                 "subj_id": subj_id,
                 "obj_id": obj_id,
                 "rel": rel,
+                "pmid": pmid,
                 "subj_embed": subj_embed,
                 "obj_embed": obj_embed,
             }
@@ -83,7 +89,7 @@ class CustomNeo4jGraphStore(Neo4jGraphStore):
             f"MERGE (obj: `{self.node_label}` {{id: row.obj_id}}) "
             "WITH subj, obj, row "
             # f"MERGE (subj)-[:row.rel {{type: row.rel}}]->(obj)"
-            f"CALL apoc.merge.relationship(subj, row.rel, {{type: row.rel}}, {{}}, obj, {{}}) YIELD rel "
+            f"CALL apoc.merge.relationship(subj, row.rel, {{type: row.rel, pmid: row.pmid}}, {{}}, obj, {{}}) YIELD rel "
             f"CALL db.create.setNodeVectorProperty(subj, '{self.embedding_property}', row.subj_embed) "
             f"CALL db.create.setNodeVectorProperty(obj, '{self.embedding_property}', row.obj_embed) "
             "} "

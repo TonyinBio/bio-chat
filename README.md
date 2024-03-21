@@ -19,7 +19,9 @@ Run a prompt:
 python starter.py
 ```
 
-TODO: Display subgraph as a figure in chainlit
+TODO: Citations
+- ingest should add a new edge property
+- retrieve should return edge property
 
 TODO: Improve prompt?
 
