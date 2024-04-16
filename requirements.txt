@@ -1,22 +1,22 @@
-dataclasses_json~=0.6.4
-llama_index~=0.10.18
-python-dotenv~=1.0.1
-tqdm~=4.66.2
-typing_extensions~=4.10.0
+dataclasses_json
+llama_index
+python-dotenv
+tqdm
+typing_extensions
 llama-index-graph-stores-neo4j
 llama-index-vector-stores-neo4jvector
 llama-index-llms-ollama
 chainlit
 llama-index-embeddings-huggingface
 
---index-url https://download.pytorch.org/whl/cu118
--f https://data.pyg.org/whl/torch-2.2.0+cu118.html
-torch
+# --index-url https://download.pytorch.org/whl/cu118
+# torch
+-f https://data.pyg.org/whl/torch-2.2.0+cu121.html
 pcst_fast
 torch_geometric
 pandas
 plotly
 networkx
 
-scipy==1.8.0
-networkx==2.6
+scipy
+networkx

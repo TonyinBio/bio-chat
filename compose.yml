@@ -1,9 +1,22 @@
 services:
-  app:
-    build: .
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+    volumes:
+      - .:/home/code
     ports:
-      - "3000:3000"
-    links:
-      - neo4j
-  neo4j:
-    image: "neo4j:5.17.0-bullseye"
+      - "8000:8000"
+    command: chainlit run src/app.py -w
+
+  ollama:
+    image: ollama/ollama:latest  
+    ports:
+      - "11434:11434"  
+    restart: unless-stopped
+  #   links:
+  #     - neo4j
+  # neo4j:
+  #   image: "neo4j:5.17.0-bullseye"

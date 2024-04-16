@@ -27,9 +27,12 @@ from extensions.callbacks import CustomCallbackHandler
 from llama_index.core import Settings
 from llama_index.llms.ollama import Ollama
 from llama_index.core.embeddings import resolve_embed_model
-username = os.environ.get("username")
-password = os.environ.get("password")
-url = os.environ.get("url")
+
+import requests
+
+username = "neo4j"
+password = os.environ.get("NEO4J_PASSWORD")
+url = "neo4j+s://be4c0c46.databases.neo4j.io"
 
 # rebuild storage context
 neo4j_graph = CustomNeo4jGraphStore(
@@ -42,7 +45,14 @@ PERSIST_DIR = None
 storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR, graph_store=neo4j_graph)
 
 # global settings
-Settings.llm = Ollama(model="gemma:2b", request_timeout=60.0, temperature=0)
+llm_model_name = "gemma:2b"
+requests.post("http://ollama:11434/api/pull", json={"name": llm_model_name}, timeout=600.0)  # credit: Steven Tang :)
+Settings.llm = Ollama(
+    base_url="http://ollama:11434",
+    model=llm_model_name,
+    request_timeout=60.0, 
+    temperature=0
+)
 Settings.embed_model = resolve_embed_model("local:BAAI/bge-small-en-v1.5")
 Settings.chunk_size = 512
 
