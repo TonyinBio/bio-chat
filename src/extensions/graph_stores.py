@@ -12,7 +12,6 @@ from llama_index.core.embeddings import resolve_embed_model
 
 from llama_index.core.indices import KnowledgeGraphIndex
 
-from .transformations import TripletExtractor, GraphEmbedding
 from .schema import TripletNode
 from typing import List, Any, Dict
 import logging

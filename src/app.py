@@ -33,6 +33,7 @@ import requests
 username = "neo4j"
 password = os.environ.get("NEO4J_PASSWORD")
 url = "neo4j+s://be4c0c46.databases.neo4j.io"
+# url = "bolt://neo4j:7687"
 
 # rebuild storage context
 neo4j_graph = CustomNeo4jGraphStore(

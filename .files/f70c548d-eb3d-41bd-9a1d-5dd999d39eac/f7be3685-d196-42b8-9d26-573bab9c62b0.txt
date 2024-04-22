@@ -1,0 +1,10 @@
+The following is a knowledge in the form of directed graph like: [subject, predicate, object]
+
+Knowledge:
+[germ tubes, BIOLOCATION_IS, hair]
+[hypha, BIOLOCATION_IS, hair]
+[germ tubes, BIOLOCATION_IS, intersegmental membrane]
+Citations:
+PMID: PMC5055524
+PMID: PMC5055524
+PMID: PMC5055524

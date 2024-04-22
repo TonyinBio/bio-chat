@@ -18,6 +18,7 @@ from llama_index.core.prompts.default_prompts import (
 from llama_index.core.indices import KnowledgeGraphIndex
 
 from .schema import TripletNode
+from .graph_stores import CustomNeo4jGraphStore
 
 from llama_index.core.bridge.pydantic import Field, PrivateAttr
 
@@ -198,8 +199,8 @@ class GraphEmbedding(TransformComponent):
             objects.append(node.object)
         
         # add TextNode.embedding to all
-        self._embed_model(subjects)
-        self._embed_model(objects)
+        self._embed_model(subjects, show_progress=False)
+        self._embed_model(objects, show_progress=False)
         
         return nodes
 
@@ -255,3 +256,21 @@ class JsonlToTriplets(TransformComponent):
                         )
                     )
         return new_nodes
+    
+
+
+
+class SaveToNeo4j(TransformComponent):
+    neo4j_graph_store: CustomNeo4jGraphStore
+    
+    def __call__(
+            self, 
+            nodes: Sequence[TripletNode],
+            **kwargs
+    ) -> Sequence[TripletNode]:
+        
+        logger.debug(f"Num of extracted triplets: {len(nodes)}")
+        # save nodes to graph store
+        self.neo4j_graph_store.add(nodes)
+        
+        return nodes

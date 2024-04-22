@@ -1,0 +1,22 @@
+The following is a knowledge in the form of directed graph like: [subject, predicate, object]
+
+Knowledge:
+[glucose, INVOLVED_IN, insulin secretion]
+[insulin secretion, HAS_ROLE_OF, regulation of glucose]
+[skin, BIOLOCATION_IS, human body]
+[surrounding bone, HAS_ILL-DEFINED_HIGH_SIGNAL_ON_T2WI_AND_ENHANCEMENT_ON_T1WI, human body]
+[blood glucose, BIOLOCATION_IS, human body]
+[glucose, BIOLOCATION_IS, human body]
+[human body, BIOLOCATION_OF_(PART_OF), cornea]
+[high signal, IS_LOCATED_IN, surrounding bone]
+[wound discharges, BIOLOCATION_IS, skin]
+Citations:
+PMID: PMC5006523
+PMID: PMC5006523
+PMID: PMC5006783
+PMID: PMC5061671
+PMID: PMC5061928
+PMID: PMC5000455
+PMID: PMC5004157
+PMID: PMC5061671
+PMID: PMC5062289

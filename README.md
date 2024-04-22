@@ -8,6 +8,11 @@ Run the app:
 docker compose up -d
 ```
 
+Enter docker container:
+```
+docker exec -it bio-chat-devcontainer-1 bash
+```
+
 Setup env without docker:
 ```console
 conda create -n bio_chat python=3.11 -y

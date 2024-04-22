@@ -142,12 +142,12 @@ class GRetriever(BaseRetriever):
 
         return VectorStoreQueryResult(nodes=nodes, similarities=similarities, ids=ids)
     
-    def _get_all_neighbours(self, top_entities: VectorStoreQueryResult, depth: int = 3) -> GraphNode:
+    def _get_all_neighbours(self, top_entities: VectorStoreQueryResult, depth: int = 2) -> GraphNode:
         """Retrieve all neighbours of depth k given entities."""
         # TODO: make sure pmid is returned
         query = f'''
-            MATCH p=(seedNodes:Entity)-[*0..{depth}]-(:Entity)
-            WHERE (seedNodes.id) IN ['cannabinoids']
+            MATCH p=(n:Entity)-[*0..{depth}]-(:Entity)
+            WHERE (n.id) IN $seedNodes
             UNWIND p as path
             UNWIND relationships(path) as r
             WITH DISTINCT r
