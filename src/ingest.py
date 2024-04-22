@@ -3,8 +3,6 @@ import logging, sys
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
-print(sys.path)
-
 from llama_index.core import Document, SimpleDirectoryReader, Settings, StorageContext
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.node_parser import SentenceSplitter
@@ -28,9 +26,9 @@ from extensions.graph_stores import CustomNeo4jGraphStore
 from dotenv import load_dotenv
 load_dotenv()
 import os
-username = os.environ.get("username")
-password = os.environ.get("password")
-url = os.environ.get("url")
+username = "neo4j"
+password = os.environ.get("NEO4J_PASSWORD")
+url = "neo4j+s://be4c0c46.databases.neo4j.io"
 
 neo4j_graph = CustomNeo4jGraphStore(
     username=username,
@@ -56,19 +54,20 @@ pipeline = IngestionPipeline(
     vector_store=None,  # save the subjects and objects
 )
 # read jsonl into triplets
-# TODO: read more data
-fname = "data/triplets/pubmed_triplet_data_part_2.jsonl"
+fname = "../data/triplets/merged_April_11.jsonl"
 with open(fname, "r") as f:
     jsonl = f.read()
 
 nodes = [TextNode(text=jsonl)]
 # Ingest directly into a vector db
+print("Starting pipeline")
 triplets = pipeline.run(
-    show_progress=True, 
+    show_progress=False, 
     nodes=nodes
     # documents=documents
 )
 
-print(len(triplets))
+print(f"Num of extracted triplets: {len(triplets)}")
 # save nodes to graph store
 neo4j_graph.add(triplets)
+print("Done Upload")

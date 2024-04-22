@@ -1,4 +1,9 @@
-Setup env:
+Run the app:
+```console
+docker compose up -d
+```
+
+Setup env without docker:
 ```console
 conda create -n bio_chat python=3.11 -y
 ```

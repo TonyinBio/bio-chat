@@ -75,11 +75,11 @@ class CustomNeo4jGraphStore(Neo4jGraphStore):
         if not index_already_exists:
             self.create_new_index()
 
-    def __del__(self):
-        print(f"neo4j driver closed: {self._driver._closed}")
-        if not self._driver._closed:
-            self._driver.close()
-        print(f"neo4j driver closed: {self._driver._closed}")
+    # def __del__(self):
+    #     print(f"neo4j driver closed: {self._driver._closed}")
+    #     if not self._driver._closed:
+    #         self._driver.close()
+    #     print(f"neo4j driver closed: {self._driver._closed}")
 
     def add(self, nodes: List[TripletNode], **add_kwargs: Any) -> List[str]:
         import_query = (

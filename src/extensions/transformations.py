@@ -219,17 +219,24 @@ class JsonlToTriplets(TransformComponent):
             # extract triplets
             lines = node.get_content(metadata_mode=MetadataMode.NONE).strip().split("\n")
             for line in lines:
+                ## old jsonl reading
+                # try:
+                #     datum = json.loads(line)
+                #     text_triplets: str = datum["output"][0]
+                # except:
+                #     continue
+                # if not text_triplets.startswith("[["):
+                #     continue
+                # text_triplets = text_triplets.replace("\'", "\"")
+                # triplets = json.loads(text_triplets)
                 try:
                     datum = json.loads(line)
-                    text_triplets: str = datum["output"][0]
+                    triplets: str = datum["output"]
                 except:
                     continue
-                if not text_triplets.startswith("[["):
-                    continue
-                text_triplets = text_triplets.replace("\'", "\"")
-                triplets = json.loads(text_triplets)
 
-                pmid = int(datum["id"])  # make sure it is an int
+                # pmid = int(datum["id"])  # make sure it is an int
+                pmid = datum["id"]
                 for triplet in triplets:
                     if len(triplet) != 3:
                         continue

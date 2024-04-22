@@ -16,7 +16,6 @@ services:
     ports:
       - "11434:11434"  
     restart: unless-stopped
-  #   links:
-  #     - neo4j
+
   # neo4j:
   #   image: "neo4j:5.17.0-bullseye"
