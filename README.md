@@ -1,3 +1,8 @@
+Set Neo4j password:
+```console
+export NEO4J_PASSWORD=...
+```
+
 Run the app:
 ```console
 docker compose up -d
