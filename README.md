@@ -1,3 +1,6 @@
+# Bio Chat
+An LLM using retrieval augmented generation over a biomedical knowledge graph to answer questions. Served as a website.
+
 Set Neo4j password:
 ```console
 export NEO4J_PASSWORD=...
@@ -55,10 +58,9 @@ TODO: Decide on predicates
 - process
 - role
 
-THE plan:
+Note to self:
+plan:
 - VectorIndex (VectorIndexRetriever) -> interfaces with embeddings in neo4j
 - GraphIndex (KGRAGRetriever) -> interfaces with triplets and subgraph in neo4j 
 - GRetriever -> combines the two
 - will use both neo4jstores but have them point to the same db
-
-<sub><sub><sub><sub><sup><sup><sup><sup>pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and sufferingpain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and sufferingpain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and sufferingpain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering and pain and suffering</sup></sup></sup></sup>
