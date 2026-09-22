@@ -19,51 +19,92 @@ from llama_index.core import (
 from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 
 # llama-index extensions
-from extensions.graph_stores import CustomNeo4jGraphStore
-from extensions.retrievers import GRetriever
+# from extensions.graph_stores import CustomNeo4jGraphStore
+from llama_index.graph_stores.neo4j import Neo4jPGStore
+# from extensions.retrievers import GRetriever
+from llama_index.core.indices.property_graph import VectorContextRetriever, PGRetriever
 from extensions.callbacks import CustomCallbackHandler
 
 # from llama_index.graph_stores.neo4j import Neo4jGraphStore
 from llama_index.core import Settings
 from llama_index.llms.ollama import Ollama
+from google.genai import types
+from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core.embeddings import resolve_embed_model
 
 import requests
 
-username = "neo4j"
+# username = "neo4j"
+username = os.environ.get("NEO4J_USERNAME")
 password = os.environ.get("NEO4J_PASSWORD")
-url = "neo4j+s://be4c0c46.databases.neo4j.io"
+url = os.environ.get("NEO4J_URI")
+database = os.environ.get("NEO4J_DATABASE")
+# url = "neo4j+s://be4c0c46.databases.neo4j.io"
 # url = "bolt://neo4j:7687"
+# print(username)
+# print(password)
+# print(url)
 
 # rebuild storage context
-neo4j_graph = CustomNeo4jGraphStore(
+# neo4j_graph = CustomNeo4jGraphStore(
+#     username=username,
+#     password=password,
+#     url=url,
+#     embedding_dimension=384,
+# )
+neo4j_graph = Neo4jPGStore(
     username=username,
     password=password,
     url=url,
-    embedding_dimension=384,
+    database=database,
 )
 PERSIST_DIR = None
 storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR, graph_store=neo4j_graph)
 
 # global settings
-llm_model_name = "gemma:2b"
-requests.post("http://ollama:11434/api/pull", json={"name": llm_model_name}, timeout=600.0)  # credit: Steven Tang :)
-Settings.llm = Ollama(
-    base_url="http://ollama:11434",
-    model=llm_model_name,
-    request_timeout=60.0, 
-    temperature=0
+# llm_model_name = "gemma:2b"
+# llm_model_name = "qwen2.5:0.5b"
+# requests.post("http://ollama:11434/api/pull", json={"name": llm_model_name}, timeout=600.0)  # credit: Steven Tang :)
+# Settings.llm = Ollama(
+#     base_url="http://ollama:11434",
+#     model=llm_model_name,
+#     request_timeout=120.0, 
+#     temperature=0
+# )
+temp = 0.0
+generate_content_config = types.GenerateContentConfig(
+    temperature=temp,
+    thinking_config=types.ThinkingConfig(
+        thinking_level="MINIMAL",
+    ),
+    audio_transcription_config=types.AudioTranscriptionConfig(
+    ),
+    tools=[],
+)
+Settings.llm = GoogleGenAI(
+    model="gemma-4-26b-a4b-it",
+    temperature=temp,
+    generation_config=generate_content_config
+    # api_key="some key",  # uses GOOGLE_API_KEY env var by default
 )
 Settings.embed_model = resolve_embed_model("local:BAAI/bge-small-en-v1.5")
-Settings.chunk_size = 512
+# Settings.chunk_size = 512
 
 @cl.on_chat_start
 async def factory():
     # init llm and embedder
-    Settings.callback_manager = CallbackManager([CustomCallbackHandler()])
+    Settings.callback_manager = CallbackManager([
+        # CustomCallbackHandler()
+        cl.LlamaIndexCallbackHandler()
+    ])
 
-    retriever = GRetriever(storage_context=storage_context, verbose=True)  # NOTE: had to change super to top in src code
-    
+    # retriever = GRetriever(storage_context=storage_context, verbose=True)  # NOTE: had to change super to top in src code
+    sub_retriever = VectorContextRetriever(
+        graph_store=neo4j_graph,
+    )
+    retriever = PGRetriever(  # TODO: how does this use multiple retrievers?
+        sub_retrievers=[sub_retriever],
+    )
     query_engine = RetrieverQueryEngine.from_args(
         retriever, 
         response_mode="compact",

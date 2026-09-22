@@ -21,25 +21,47 @@ from llama_index.core.schema import BaseNode, TextNode
 from extensions.transformations import TripletExtractor, GraphEmbedding, JsonlToTriplets, SaveToNeo4j
 from extensions.graph_stores import CustomNeo4jGraphStore
 
+from llama_index.graph_stores.neo4j import Neo4jPGStore
+
 from dotenv import load_dotenv
 load_dotenv()
 import os
 
 from tqdm import tqdm
 
-USERNAME = "neo4j"
+USERNAME = os.environ.get("NEO4J_USERNAME")
 PASSWORD = os.environ.get("NEO4J_PASSWORD")
-URL = "neo4j+s://be4c0c46.databases.neo4j.io"
+URL = os.environ.get("NEO4J_URI")
+DATABASE = os.environ.get("NEO4J_DATABASE")
+
+# USERNAME = "neo4j"
+# PASSWORD = os.environ.get("NEO4J_PASSWORD")
+# URL = "neo4j+s://be4c0c46.databases.neo4j.io"
+OLLAMA_URL = os.environ.get("OLLAMA_URL")
+
+# print(USERNAME)
+# print(PASSWORD)
+print("Connecting to:", URL)
+# print(DATABASE)
 
 # init llm and embedder
-Settings.llm = Ollama(model="gemma", request_timeout=60.0, temperature=0)
+print("Connecting to Ollama at:", OLLAMA_URL)
+Settings.llm = Ollama(model="gemma", base_url=OLLAMA_URL, request_timeout=60.0, temperature=0)
 Settings.embed_model = resolve_embed_model("local:BAAI/bge-small-en-v1.5")
 Settings.chunk_size = 512
 
-neo4j_graph = CustomNeo4jGraphStore(
+# neo4j_graph = CustomNeo4jGraphStore(
+#     username=USERNAME,
+#     password=PASSWORD,
+#     url=URL,
+#     embedding_dimension=384,
+#     database=DATABASE
+# )
+neo4j_graph = Neo4jPGStore(
     username=USERNAME,
     password=PASSWORD,
     url=URL,
+    database=DATABASE,
     embedding_dimension=384,
 )
 
@@ -82,25 +104,29 @@ def partition_data(fname, outfname, lines_per_file=50, ):
     return file_number - 1
 
 def main():
-    large_fname = "../data/triplets/merged_April_11.jsonl"
-    partition_fname = "../data/triplets/partition/merged_April_11"
-    end_file_number = partition_data(large_fname, partition_fname)
-    
-    start_file_number = 0
-    # end_file_number = 0
+    try:
+        large_fname = "../data/triplets/merged_April_11.jsonl"
+        partition_fname = "../data/triplets/partition/merged_April_11"
+        end_file_number = partition_data(large_fname, partition_fname)
+        
+        start_file_number = 0
+        # end_file_number = 0
 
-    pipeline = create_pipeline()
-    
-    for fnum in tqdm(range(start_file_number, end_file_number + 1)):
-        fname = partition_fname + "_split_" + f"{fnum:03d}" + ".jsonl"
-        with open(fname, "r") as infile:
-            nodes = [TextNode(text=infile.read())]
+        pipeline = create_pipeline()
 
-        triplets = pipeline.run(
-            show_progress=False, 
-            nodes=nodes
-            # documents=documents
-        )
+        print("STARTING INGESTION PIPELINE")
+        for fnum in tqdm(range(start_file_number, end_file_number + 1)):
+            fname = partition_fname + "_split_" + f"{fnum:03d}" + ".jsonl"
+            with open(fname, "r") as infile:
+                nodes = [TextNode(text=infile.read())]
+
+            triplets = pipeline.run(
+                show_progress=False, 
+                nodes=nodes
+                # documents=documents
+            )
+    finally:
+        neo4j_graph.close()
 
 if __name__ == "__main__":
     main()

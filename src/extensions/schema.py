@@ -10,7 +10,6 @@ from hashlib import sha256
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Sequence, Tuple
 
-from dataclasses_json import DataClassJsonMixin
 from llama_index.core.bridge.pydantic import Field
 from llama_index.core.utils import SAMPLE_TEXT, truncate_text
 from typing_extensions import Self

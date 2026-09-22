@@ -1,0 +1,2 @@
+{"id": "12345678", "output": [["Aspirin", "treats", "Headache"], ["Aspirin", "has_side_effect", "Stomach pain"]]}
+{"id": "87654321", "output": [["Diabetes", "associated_with", "Obesity"], ["Metformin", "treats", "Diabetes"]]}

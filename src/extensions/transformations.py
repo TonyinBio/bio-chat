@@ -8,8 +8,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from llama_index.core.settings import (
     Settings,
-    embed_model_from_settings_or_context,
-    llm_from_settings_or_context,
+    # embed_model_from_settings_or_context,  # old llama index code
+    # llm_from_settings_or_context,
 )
 from llama_index.core.prompts import BasePromptTemplate
 from llama_index.core.prompts.default_prompts import (
@@ -49,7 +49,7 @@ DEFAULT_KG_TRIPLET_EXTRACT_PROMPT = PromptTemplate(
     ), prompt_type=PromptType.KNOWLEDGE_TRIPLET_EXTRACT
 )
 class TripletExtractor(TransformComponent):
-    _llm: LLM = PrivateAttr(default_factory=lambda: llm_from_settings_or_context(Settings, None))
+    _llm: LLM = PrivateAttr(default_factory=lambda: Settings.llm)
     max_triplets_per_chunk: int = 10
     kg_triple_extract_template: PromptTemplate = (
         DEFAULT_KG_TRIPLET_EXTRACT_PROMPT.partial_format(
@@ -183,7 +183,7 @@ class TripletExtractor(TransformComponent):
         logging.debug(f"Parsed response: {results}")
         return results
 class GraphEmbedding(TransformComponent):
-    _embed_model: BaseEmbedding = PrivateAttr(default_factory=lambda: embed_model_from_settings_or_context(Settings, None))
+    _embed_model: BaseEmbedding = PrivateAttr(default_factory=lambda: Settings.embed_model)
     
     def __call__(
             self, 
