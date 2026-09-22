@@ -2,7 +2,7 @@
 
 # dataclasses_json
 # llama_index==0.10.68  # aug 21, 2024
-llama_index==0.14.24
+llama_index_core==0.14.24
 python-dotenv
 tqdm
 # typing_extensions
@@ -10,8 +10,8 @@ tqdm
 # sentence_transformers==3.0.1
 llama-index-graph-stores-neo4j==0.8.0
 llama-index-vector-stores-neo4jvector==0.7.0
-llama-index-llms-ollama==0.11.0
-llama-index-llms-bedrock==0.6.0
+# llama-index-llms-ollama==0.11.0
+# llama-index-llms-bedrock==0.6.0
 llama-index-llms-google-genai==0.11.2
 llama-index-embeddings-huggingface==0.8.0
 # chainlit==1.1.301
@@ -20,10 +20,10 @@ chainlit
 # --index-url https://download.pytorch.org/whl/cu118
 # torch
 # -f https://data.pyg.org/whl/torch-2.1.0+cu121.html
-pcst_fast
+# pcst_fast
 # torch_geometric==2.5.3
-pandas
-plotly
-networkx
+# pandas
+# plotly
+# networkx
 
-scipy
+# scipy

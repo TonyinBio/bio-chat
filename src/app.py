@@ -23,27 +23,21 @@ from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 from llama_index.graph_stores.neo4j import Neo4jPGStore
 # from extensions.retrievers import GRetriever
 from llama_index.core.indices.property_graph import VectorContextRetriever, PGRetriever
-from extensions.callbacks import CustomCallbackHandler
+# from extensions.callbacks import CustomCallbackHandler
 
 # from llama_index.graph_stores.neo4j import Neo4jGraphStore
 from llama_index.core import Settings
-from llama_index.llms.ollama import Ollama
+# from llama_index.llms.ollama import Ollama
 from google.genai import types
 from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core.embeddings import resolve_embed_model
 
 import requests
 
-# username = "neo4j"
 username = os.environ.get("NEO4J_USERNAME")
 password = os.environ.get("NEO4J_PASSWORD")
 url = os.environ.get("NEO4J_URI")
 database = os.environ.get("NEO4J_DATABASE")
-# url = "neo4j+s://be4c0c46.databases.neo4j.io"
-# url = "bolt://neo4j:7687"
-# print(username)
-# print(password)
-# print(url)
 
 # rebuild storage context
 # neo4j_graph = CustomNeo4jGraphStore(
