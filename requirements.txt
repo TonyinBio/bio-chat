@@ -17,6 +17,11 @@ llama-index-embeddings-huggingface==0.8.0
 # chainlit==1.1.301
 chainlit
 
+# ingestion
+requests
+lxml
+beautifulsoup4
+
 # --index-url https://download.pytorch.org/whl/cu118
 # torch
 # -f https://data.pyg.org/whl/torch-2.1.0+cu121.html

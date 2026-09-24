@@ -30,6 +30,9 @@ from llama_index.core.graph_stores.types import (
     KG_RELATIONS_KEY,
 )
 
+from google.genai import types
+from llama_index.llms.google_genai import GoogleGenAI
+
 from llama_index.graph_stores.neo4j import Neo4jPGStore
 
 from dotenv import load_dotenv
@@ -49,6 +52,7 @@ class MyGraphExtractor(TransformComponent):
     ) -> list[BaseNode]:
         # https://developers.llamaindex.ai/python/framework/module_guides/indexing/lpg_index_guide/#sub-classing-extractors
         for llama_node in llama_nodes:
+            print(llama_node.relationships)
             # print(llama_node.get_content())
             # print(llama_node.metadata)
             # print(KG_NODES_KEY, KG_RELATIONS_KEY)
@@ -116,11 +120,27 @@ DATABASE = os.environ.get("NEO4J_DATABASE")
 # USERNAME = "neo4j"
 # PASSWORD = os.environ.get("NEO4J_PASSWORD")
 # URL = "neo4j+s://be4c0c46.databases.neo4j.io"
-OLLAMA_URL = os.environ.get("OLLAMA_URL")
+# OLLAMA_URL = os.environ.get("OLLAMA_URL")
 
 # init llm and embedder
-print("Connecting to Ollama at:", OLLAMA_URL)
-Settings.llm = Ollama(model="gemma:2b", base_url=OLLAMA_URL, request_timeout=120.0, temperature=0)
+# print("Connecting to Ollama at:", OLLAMA_URL)
+# Settings.llm = Ollama(model="gemma:2b", base_url=OLLAMA_URL, request_timeout=120.0, temperature=0)
+temp = 0.0
+generate_content_config = types.GenerateContentConfig(
+    temperature=temp,
+    thinking_config=types.ThinkingConfig(
+        thinking_level="MINIMAL",
+    ),
+    audio_transcription_config=types.AudioTranscriptionConfig(
+    ),
+    tools=[],
+)
+Settings.llm = GoogleGenAI(
+    model="gemma-4-26b-a4b-it",
+    temperature=temp,
+    generation_config=generate_content_config
+    # api_key="some key",  # uses GOOGLE_API_KEY env var by default
+)
 Settings.embed_model = resolve_embed_model("local:BAAI/bge-small-en-v1.5")
 # Settings.chunk_size = 512
 
