@@ -35,6 +35,12 @@ class CdkStack(Stack):
             "bio-chat/google-api-key",
         )
 
+        aura_client_secret = secretsmanager.Secret.from_secret_name_v2(
+            self,
+            "AuraClientSecret",
+            "bio-chat/aura-client-secret",
+        )
+
         service = ecs_patterns.ApplicationLoadBalancedFargateService(
             self,
             "BioChatService",
@@ -56,11 +62,14 @@ class CdkStack(Stack):
                         "NEO4J_URI": "neo4j+s://ce4b1b9a.databases.neo4j.io",
                         "NEO4J_USERNAME": "ce4b1b9a",
                         "NEO4J_DATABASE": "ce4b1b9a",
+                        "AURA_AUTO_RESUME": "true",
+                        "AURA_CLIENT_ID": "9mdpgVVj8Czp8XQ3PNq2KNeGWrSsffNE",
                     },
 
                     secrets={
                         "NEO4J_PASSWORD": ecs.Secret.from_secrets_manager(neo4j_password),
                         "GOOGLE_API_KEY": ecs.Secret.from_secrets_manager(google_api_key),
+                        "AURA_CLIENT_SECRET": ecs.Secret.from_secrets_manager(aura_client_secret),
                     }
                 )
             ),
