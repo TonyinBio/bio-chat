@@ -22,6 +22,7 @@ project_root = str(Path(__file__).resolve().parent.parent)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 from src.database import ConnectionManager
+from src.aura import AuraResumer
 
 # llama-index extensions
 # from extensions.graph_stores import CustomNeo4jGraphStore
@@ -63,9 +64,24 @@ def connect_graph():
     )
 
 
-connections = ConnectionManager(connect_graph)
+aura = AuraResumer.from_env()
+
+
+def recover_database(exc):
+    # Authentication and application errors must not trigger instance actions.
+    if isinstance(exc, (ServiceUnavailable, SessionExpired, TransientError)):
+        aura.resume_if_paused()
+
+
+connections = ConnectionManager(connect_graph, recovery=recover_database)
 logger = logging.getLogger(__name__)
 UNAVAILABLE_MESSAGE = "The database is unavailable. Please try again shortly."
+
+
+def unavailable_message():
+    if aura.starting:
+        return "The database is starting. Please try again in a minute."
+    return UNAVAILABLE_MESSAGE
 
 # global settings
 # llm_model_name = "gemma:2b"
@@ -118,8 +134,9 @@ async def initialize_session():
             exc, (ServiceUnavailable, SessionExpired, TransientError)
         ):
             await asyncio.to_thread(connections.invalidate, neo4j_graph)
+            await asyncio.to_thread(recover_database, exc)
         cl.user_session.set("query_engine", None)
-        await cl.Message(content=UNAVAILABLE_MESSAGE).send()
+        await cl.Message(content=unavailable_message()).send()
         return None
 
     cl.user_session.set("neo4j_graph", neo4j_graph)
@@ -163,9 +180,10 @@ async def main(message: cl.Message):
             response_message.content = response.response_txt
 
         await response_message.send()
-    except (ServiceUnavailable, SessionExpired, TransientError):
+    except (ServiceUnavailable, SessionExpired, TransientError) as exc:
         logger.exception("Neo4j became unavailable while answering a message")
         graph = cl.user_session.get("neo4j_graph")
         await asyncio.to_thread(connections.invalidate, graph)
+        await asyncio.to_thread(recover_database, exc)
         cl.user_session.set("query_engine", None)
-        await cl.Message(content=UNAVAILABLE_MESSAGE).send()
+        await cl.Message(content=unavailable_message()).send()
