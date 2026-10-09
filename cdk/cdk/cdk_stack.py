@@ -5,6 +5,10 @@ from aws_cdk import (
     aws_ecs_patterns as ecs_patterns,
     aws_secretsmanager  as secretsmanager,
     aws_iam as iam,
+    aws_events as events,
+    aws_events_targets as targets,
+    aws_sns as sns,
+    aws_sns_subscriptions as subscriptions,
 )
 from constructs import Construct
 
@@ -67,7 +71,39 @@ class CdkStack(Stack):
                 "service-role/AmazonECSTaskExecutionRolePolicy"
             )
         )
-        
+                
+                # Email destination for alerts
+        alerts = sns.Topic(
+            self,
+            "TaskFailureAlerts",
+            display_name="BioChat task failures",
+        )
+
+        alerts.add_subscription(
+            subscriptions.EmailSubscription("r.tony.sun@gmail.com")
+        )
+
+        # Detect crashes and failures to start for this ECS service
+        failure_rule = events.Rule(
+            self,
+            "TaskFailureRule",
+            event_pattern=events.EventPattern(
+                source=["aws.ecs"],
+                detail_type=["ECS Task State Change"],
+                detail={
+                    "clusterArn": [service.cluster.cluster_arn],
+                    "group": [f"service:{service.service.service_name}"],
+                    "lastStatus": ["STOPPED"],
+                    "stopCode": [
+                        "EssentialContainerExited",
+                        "TaskFailedToStart",
+                    ],
+                },
+            ),
+        )
+
+        failure_rule.add_target(targets.SnsTopic(alerts))
+
         CfnOutput(
             self,
             "LoadBalancerURL",
