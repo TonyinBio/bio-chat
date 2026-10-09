@@ -193,9 +193,9 @@ def partition_data(fname, outfname, lines_per_file=50, ):
 def main():
     try:
         documents = SimpleDirectoryReader(input_dir="data/pmc").load_data()
-        documents = documents[:1]
+        # documents = documents[:1]
         # print(documents[0])
-        print(documents[0].metadata["file_name"])
+        # print(documents[0].metadata["file_name"])
         print("STARTING INGESTION PIPELINE")
 
         index = PropertyGraphIndex.from_existing(

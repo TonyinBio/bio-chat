@@ -6,6 +6,7 @@ from pathlib import Path
 from datasets import load_dataset
 from tqdm import tqdm
 from bs4 import BeautifulSoup
+import json
 
 BUCKET = "pmc-oa-opendata"
 OUTPUT_DIR = Path("data/pmc")
@@ -70,10 +71,18 @@ def download_articles(pmc_ids):
             str(output_path)
         )
 
+file_to_disease = {}
 dataset = load_dataset("vladimire/geneturing", "gene_disease_association")
-for i in tqdm(range(1)):
+for i in tqdm(range(10)):
     disease = dataset["test"][i]["question"].lstrip("What are genes related to ").rstrip("?")
     ids = search_pmc(disease, limit=1)
     pmcids = ["PMC" + pmcid for pmcid in ids]
+
     print(disease)
+    if pmcids:
+        file_to_disease[pmcids[0]] = disease
+
     download_articles(pmcids)
+
+with open(OUTPUT_DIR/"pmcid_to_disease.json", "w") as f:
+    json.dump(file_to_disease, f, indent=4)
