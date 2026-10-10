@@ -78,6 +78,10 @@ class CdkStack(Stack):
                     }
                 )
             ),
+
+            circuit_breaker=ecs.DeploymentCircuitBreaker(
+                rollback=True
+            ),
         )
 
         service.task_definition.execution_role.add_managed_policy(
