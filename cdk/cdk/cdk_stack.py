@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     CfnOutput,
     aws_ecs as ecs,
+    aws_ecr as ecr,
     aws_ecs_patterns as ecs_patterns,
     aws_secretsmanager  as secretsmanager,
     aws_iam as iam,
@@ -38,7 +39,11 @@ class CdkStack(Stack):
         aura_client_secret = secretsmanager.Secret.from_secret_name_v2(
             self,
             "AuraClientSecret",
-            "bio-chat/aura-client-secret",
+            "bio-chat/aura-client-sec",
+        )
+
+        repository = ecr.Repository.from_repository_name(
+            self, "BioChatRepository", "bio-chat"
         )
 
         service = ecs_patterns.ApplicationLoadBalancedFargateService(
@@ -53,8 +58,8 @@ class CdkStack(Stack):
 
             task_image_options=(
                 ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
-                    image=ecs.ContainerImage.from_registry(
-                        "250832562559.dkr.ecr.us-east-2.amazonaws.com/bio-chat:latest"
+                    image=ecs.ContainerImage.from_ecr_repository(
+                        repository, tag="latest"
                     ),
 
                     container_port=8000,
@@ -81,7 +86,7 @@ class CdkStack(Stack):
             )
         )
                 
-                # Email destination for alerts
+        # Email destination for alerts
         alerts = sns.Topic(
             self,
             "TaskFailureAlerts",
