@@ -3,23 +3,35 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+    # environment:
+    #   - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+    env_file:
+      - .env
     volumes:
       - .:/home/code
     ports:
       - "8000:8000"
-    command: chainlit run src/app.py -w
-    # command: sleep infinity
+    # command: chainlit run src/app.py -w --host 0.0.0.0
+    command: sleep infinity
 
-  ollama:
-    image: ollama/ollama:latest  
-    ports:
-      - "11434:11434"  
-    restart: unless-stopped
+  # ollama:
+  #   image: ollama/ollama:latest  
+  #   ports:
+  #     - "11434:11434"  
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   gpus: all
+  #   entrypoint: ["/bin/sh", "-c"]
+  #   command: >
+  #     "ollama serve &
+  #     until ollama list >/dev/null 2>&1; do sleep 1; done;
+  #     ollama pull gemma:2b;
+  #     ollama pull qwen2.5:0.5b;
+  #     wait"
+  #   restart: unless-stopped
 
   neo4j:
-    image: neo4j:5.16.0
+    image: neo4j:5.26.30
     restart: unless-stopped
     volumes:
       - ./data/neo4j:/data
@@ -32,3 +44,7 @@ services:
       - NEO4J_apoc_import_file_enabled=true
       - NEO4J_apoc_import_file_use__neo4j__config=true
       - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
+    
+# volumes:
+#   ollama_data:

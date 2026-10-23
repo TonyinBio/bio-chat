@@ -10,7 +10,7 @@ from llama_index.core.callbacks.schema import EventPayload, CBEventType
 from llama_index.core.llms import ChatMessage, ChatResponse, CompletionResponse
 
 from llama_index.core.schema import BaseNode
-from torch_geometric.data.data import Data
+# from torch_geometric.data.data import Data
 
 DEFAULT_IGNORE = [
     CBEventType.CHUNKING,
@@ -72,7 +72,7 @@ class CustomCallbackHandler(cl.LlamaIndexCallbackHandler):
         if payload is None or step is None:
             return
 
-        self._restore_context()
+        # self._restore_context()
 
         step.end = utc_now()
 

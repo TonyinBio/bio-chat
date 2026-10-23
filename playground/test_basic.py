@@ -68,4 +68,4 @@ query_engine = RetrieverQueryEngine.from_args(
 )
 # query_engine = index.as_query_engine(verbose=True, include_text=True)
 
-print(query_engine.query("What are cannabinoids?"))
+print(query_engine.query("Tell me the side effects of Aspirin."))

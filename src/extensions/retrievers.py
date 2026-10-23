@@ -23,8 +23,6 @@ from llama_index.core.vector_stores.types import (
     VectorStoreQueryResult,
 )
 from llama_index.core.settings import (
-    embed_model_from_settings_or_context,
-    callback_manager_from_settings_or_context,
     Settings,
 )
 
@@ -57,12 +55,12 @@ class GRetriever(BaseRetriever):
         """Init params."""
         super().__init__(
             callback_manager=callback_manager
-            or callback_manager_from_settings_or_context(Settings, None),
+            or Settings.callback_manager,
             **kwargs
         )
         self._chainlit = chainlit
         self._custom_graph_store = storage_context.graph_store
-        self._embed_model = embed_model_from_settings_or_context(Settings, None)
+        self._embed_model = Settings.embed_model
         self._similarity_top_k = 2
     
     def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
